@@ -6,7 +6,7 @@
 
 
 /*
- *  ~ Hi! This project is for updating my public ip address attached to my domain on a raberry pi zero.~
+ *  ~ Hi! This project is for updating my public ip address attached to my domain and is used on a raberry pi zero.~
  *
  * NOTE(s): 
  *      Used https://stackoverflow.com/questions/11208299/how-to-make-an-http-get-request-in-c-without-libcurl
@@ -25,6 +25,12 @@ int extractIpAddressFromResponse(char *response, char *ip){
         ipAddrStart += 4;   
         strncpy(ip, ipAddrStart, INET_ADDRSTRLEN);   
         ip[INET_ADDRSTRLEN - 1] = '\0';  
+        
+        //trim the pesky newline character off
+        int len = strlen(ip);
+        if (len > 0 && (ip[len - 1] == '\n' || ip[len - 1] == '\r')) {
+            ip[len - 1] = '\0';  
+        }
         return 0;
     } else {
         return -1;
@@ -56,28 +62,28 @@ int getPublicIpAddress(char *ip, const char *host){
 
 }
 
-int updatePublicIpAddress(){
+int updatePublicIpAddress( const char *newIp, const char *name, const char *email, const char* apiKey){
     char request [MAXBUF];
-    const char *page = "/api/";
+    char jsonMsg [MAXBUF];
+    const char *page = "/";
     const char *host = "127.0.0.1:8000";
-    char *jsonMsg = 
-        "{ \"comment\": \"Domain verification record\",\r\n"
-            "\"content\": \"198.51.100.4\",\r\n"
-            "\"name\": \"example.com\",\r\n"
-            "\"proxied\": true,\r\n"
-            "\"ttl\": 3600,\r\n"
-            "\"type\": \"A\"\r\n"
-        "}";   
+    snprintf(jsonMsg, 1024, 
+        "{ \"comment\": \"Domain verification record\", "
+        "\"content\": \"%s\", "
+        "\"name\": \"%s\", "
+        "\"proxied\": true, "
+        "\"ttl\": 3600, "
+        "\"type\": \"A\" }", newIp, name);
     
     snprintf(request, MAXBUF, 
         "POST %s HTTP/1.0\r\n" 
         "Host: %s\r\n"    
         "Content-type: application/json\r\n"
-        "X-Auth-Email: your_email@example.com\r\n"
-        "X-Auth-Key: your_api_key_here\r\n"
+        "X-Auth-Email: %s\r\n"
+        "X-Auth-Key: %s\r\n"
         "Connection: close\r\n"
         "Content-length: %d\r\n\r\n"
-        "%s\r\n", page, host, (unsigned int)strlen(jsonMsg), jsonMsg);
+        "%s\r\n", page, host, email, apiKey, (unsigned int)strlen(jsonMsg), jsonMsg);
   
     char response[MAXBUF];
     apiRequest("127.0.0.1", 8000, request, response);
@@ -88,19 +94,22 @@ int updatePublicIpAddress(){
 int main(){
     info("Starting");
 
-    char ip [INET_ADDRSTRLEN];
+    char currentIp [INET_ADDRSTRLEN];
 
     while(1){
-        
+        char newIp [INET_ADDRSTRLEN];
         for(int i = 0; i<NUMBER_OF_DOMAINS; i++){
-            if(getPublicIpAddress(ip, FIND_PUBLIC_IP_DOMAINS[i])==0){
+            if(getPublicIpAddress(newIp, FIND_PUBLIC_IP_DOMAINS[i])==0){
                 break;
             }
-            
         }
-        printf("\nip address is %s\n", ip);
-        updatePublicIpAddress();
-        sleep(5);
+
+        if(strcmp(newIp, currentIp)!=0){
+            strcpy(currentIp, newIp);
+            printf("\nip address is %s\n", currentIp);
+            updatePublicIpAddress( currentIp, "mydomain.com", "myemail@gmail.com", "API_KEY");
+        }
+        sleep(30);
     }
     
 

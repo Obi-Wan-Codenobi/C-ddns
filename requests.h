@@ -2,8 +2,10 @@
 #define _REQUESTSH_
 
 #define MAXBUF 1024
-
 #define NUMBER_OF_DOMAINS 5
+
+
+#include "logging.h"
 
 const char *FIND_PUBLIC_IP_DOMAINS [NUMBER_OF_DOMAINS] = {
     "icanhazip.com",
@@ -13,7 +15,5 @@ const char *FIND_PUBLIC_IP_DOMAINS [NUMBER_OF_DOMAINS] = {
     "ipinfo.io.ip"
 };
 
-    
 
-#include "logging.h"
 #endif
