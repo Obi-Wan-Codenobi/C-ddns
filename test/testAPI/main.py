@@ -6,7 +6,7 @@ import os
 
 app = FastAPI()
 
-api_router = APIRouter(prefix="/api")
+api_router = APIRouter()
 
 # Enable CORS for your FastAPI application
 app.add_middleware(
@@ -31,4 +31,5 @@ async def return_msg(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+app.include_router(api_router)
 
