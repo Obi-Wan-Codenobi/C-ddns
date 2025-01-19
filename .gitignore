@@ -1,4 +1,6 @@
+# Ignore secrets
 *.env
+secrets.c
 
 # Prerequisites
 *.d
