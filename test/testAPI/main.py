@@ -21,7 +21,7 @@ app.add_middleware(
 def root():
     return {"Hello": "World"}
 
-@api_router.post("/")
+@api_router.put("/")
 async def return_msg(request: Request):
     try:
         data = await request.json()
