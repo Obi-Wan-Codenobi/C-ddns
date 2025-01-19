@@ -6,7 +6,7 @@
 
 
 #include "logging.h"
-
+#include "secrets.c"
 const char *FIND_PUBLIC_IP_DOMAINS [NUMBER_OF_DOMAINS] = {
     "icanhazip.com",
     "ifconfig.me", 
