@@ -11,14 +11,16 @@
 #include "requests.h"
 
 
-int apiRequest(const char *ip, const int port, const char *request, char* buffer /* buffer size is MAXBUF*/)
+int httpRequest(const char *ip, const int port, const char *request, char* buffer /* buffer size is MAXBUF*/)
 {
 
     // tpc connection
+    info("HTTP connection open");
     int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sockfd < 0)
     {
         error("socket creation failed", true);
+        return -1;
     }
 
     // Create server address
@@ -32,6 +34,7 @@ int apiRequest(const char *ip, const int port, const char *request, char* buffer
     if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
         error("connect failed", true);
+        return -1;
     }
 
     info("Connected to server");
@@ -42,23 +45,22 @@ int apiRequest(const char *ip, const int port, const char *request, char* buffer
     int nbytes_last = 0;
     while (nbytes_total < request_len)
     {
-        info("start");
         nbytes_last = write(sockfd, request + nbytes_total, request_len - nbytes_total);
         if (nbytes_last == -1)
         {
             perror("write");
-            exit(EXIT_FAILURE);
+            return -1;
         }
         nbytes_total += nbytes_last;
-        info("end");
     }
 
     // Receive data from server
-    info("waiting to receive data from the server");
+
+    // may not need this loop
     while (1)
     {
         int n = read(sockfd, buffer, MAXBUF);
-        printf("Read %d bytes from server: \n", n);
+        //printf("Read %d bytes from server: \n", n);
         if (n < 0)
         {
             error("read failed", true);
@@ -71,11 +73,11 @@ int apiRequest(const char *ip, const int port, const char *request, char* buffer
 
         buffer[n] = '\0';
     }
-    printf("%s\n", buffer);
+    //printf("%s\n", buffer);
 
     // Close socket
     close(sockfd);
-    info("Socket closed");
+    info("HTTP connection closed");
 
     return 0;
 }
