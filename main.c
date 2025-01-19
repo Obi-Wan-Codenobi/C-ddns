@@ -1,6 +1,8 @@
 #include "stdio.h"
 #include "requests.h"
-#include "socketConnection.c"
+#include "httpsRequest.c"
+#include "httpRequest.c"
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -21,7 +23,7 @@ int extractIpAddressFromResponse(char *response, char *ip){
     // There may be a better way to achieve this same result
     char *ipAddrStart = strstr(response, "\r\n\r\n"); 
     if (ipAddrStart) {
-        // skip the "\r\n\r\n" sequence
+        // skip the "\r\n\r\n" sequence in a http response
         ipAddrStart += 4;   
         strncpy(ip, ipAddrStart, INET_ADDRSTRLEN);   
         ip[INET_ADDRSTRLEN - 1] = '\0';  
@@ -54,20 +56,29 @@ int getPublicIpAddress(char *ip, const char *host){
         error("Failed to fetch ip address from domain", ipResult);
         return -1;
     }
-    printf("%s\n", hostIp); 
     char response[MAXBUF];
-    apiRequest(hostIp, 80, request, response);
+    httpRequest(hostIp, 80, request, response);
     
     return extractIpAddressFromResponse(response, ip);
 
 }
 
-int updatePublicIpAddress( const char *newIp, const char *name, const char *email, const char* apiKey){
+int updatePublicIpAddress(const char *host, const char *newIp, const char *name, const char *email,
+        const char* apiKey, const char *zoneId, const char *dnsRecordId) {
+
     char request [MAXBUF];
     char jsonMsg [MAXBUF];
-    const char *page = "/";
-    const char *host = "127.0.0.1:8000";
-    snprintf(jsonMsg, 1024, 
+    //const char *host = "127.0.0.1:8000";
+    char page [MAXBUF];
+    // snprintf(page, MAXBUF, 
+    //     "/");
+
+
+    snprintf(page, MAXBUF, 
+       "/client/v4/zones/%s/dns_records/%s"
+        , zoneId, dnsRecordId);
+
+    snprintf(jsonMsg, MAXBUF, 
         "{ \"comment\": \"Domain verification record\", "
         "\"content\": \"%s\", "
         "\"name\": \"%s\", "
@@ -76,7 +87,7 @@ int updatePublicIpAddress( const char *newIp, const char *name, const char *emai
         "\"type\": \"A\" }", newIp, name);
     
     snprintf(request, MAXBUF, 
-        "POST %s HTTP/1.0\r\n" 
+        "PUT %s HTTP/1.0\r\n" 
         "Host: %s\r\n"    
         "Content-type: application/json\r\n"
         "X-Auth-Email: %s\r\n"
@@ -86,15 +97,25 @@ int updatePublicIpAddress( const char *newIp, const char *name, const char *emai
         "%s\r\n", page, host, email, apiKey, (unsigned int)strlen(jsonMsg), jsonMsg);
   
     char response[MAXBUF];
-    apiRequest("127.0.0.1", 8000, request, response);
-    return 0;
+    char hostIp [INET_ADDRSTRLEN];
+    int ipResult = resolveDomainToIP(host, hostIp, sizeof(hostIp));
+    if(ipResult!=0){
+        error("Failed to fetch ip address from domain", ipResult);
+        return -1;
+    }
+    
+    //NOTE: change host to hostIp and '8000' to '80' for prod
+    // return httpRequest(host, 8000 , request, response);
+    // return httpsRequest(host, 8000 , request, response);
+    return httpsRequest(host, 443 , request, response);
 }
 
 
 int main(){
-    info("Starting");
+    info("Starting c-ddns . . .");
 
     char currentIp [INET_ADDRSTRLEN];
+    int success = -1;
 
     while(1){
         char newIp [INET_ADDRSTRLEN];
@@ -104,10 +125,20 @@ int main(){
             }
         }
 
-        if(strcmp(newIp, currentIp)!=0){
+        if( (strcmp(newIp, currentIp)!=0) || success<0){
+
             strcpy(currentIp, newIp);
-            printf("\nip address is %s\n", currentIp);
-            updatePublicIpAddress( currentIp, "mydomain.com", "myemail@gmail.com", "API_KEY");
+            char newIpAddressMsg [MAXBUF];
+            snprintf(newIpAddressMsg, MAXBUF, "New Ip Address: [%s]", currentIp);
+            info(newIpAddressMsg);
+
+            success = updatePublicIpAddress(CLOUD_FLARE_DOMAIN, currentIp, DOMAIN, EMAIL,
+                    CLOUD_FLARE_API_KEY, ZONEID, DNS_RECORD_ID);
+            if (success<0){
+                error("FAILED TO CONTACT SERVER", 1);
+                sleep(3);
+                continue;
+            }
         }
         sleep(30);
     }
