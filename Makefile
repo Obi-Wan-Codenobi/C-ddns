@@ -5,9 +5,6 @@ COMPILED_FILE_NAME=ddns
 # OPENSSL_LIB_PATH=/usr/lib/x86_64-linux-gnu
 
 # OpenSSL paths for mac/homebrew
-# OPENSSL_INCLUDE_PATH=/opt/homebrew/include/openssl
-# OPENSSL_LIB_PATH=/opt/homebrew/opt
-
 OPENSSL_INCLUDE_PATH=/opt/homebrew/opt/openssl@3/include
 OPENSSL_LIB_PATH=/opt/homebrew/opt/openssl@3/lib
 
@@ -30,55 +27,11 @@ clean:
 	rm $(COMPILED_FILE_NAME)
 
 
-
-
-
-
-
-
-
-# ###### OLD MAKE FILE - need to integrate into current file
-# # OpenSSL paths for linux
-# OPENSSL_INCLUDE_PATH = /usr/include/openssl
-# OPENSSL_LIB_PATH = /usr/lib/x86_64-linux-gnu
-
-# # OpenSSL paths for mac/homebrew
-# OPENSSL_INCLUDE_PATH = /opt/homebrew/include/openssl
-# OPENSSL_LIB_PATH = /opt/homebrew/opt
-
-# CC = gcc
-# CFLAGS = -I$(OPENSSL_INCLUDE_PATH)
-# LDFLAGS = -L$(OPENSSL_LIB_PATH) -lcrypto -lssl
-
-# # Executable
-# SERVER = server
-# PINCRACKTEST = pincracktest
-
-# # Source 
-# SERVER_SRC = server.c
-# PINCRACK_SRC = pincrack.c
-# PINCRACKTEST_SRC = pincracktest.c
-
-# # Object 
-# SERVER_OBJ = $(SERVER_SRC:.c=.o)
-# PINCRACK_OBJ = $(PINCRACK_SRC:.c=.o)
-# PINCRACKTEST_OBJ = $(PINCRACKTEST_SRC:.c=.o)
-
-# all: $(SERVER) $(PINCRACKTEST)
-
-# # Linking for server
-# $(SERVER): $(SERVER_OBJ)
-# 	$(CC) $(CFLAGS) -o $@ $(SERVER_OBJ) $(LDFLAGS)
-
-# # Linking for pincracktest
-# $(PINCRACKTEST): $(PINCRACKTEST_SRC) $(PINCRACK_OBJ)
-# 	$(CC) $(CFLAGS) -o $@ $(PINCRACKTEST_SRC) $(PINCRACK_OBJ) $(LDFLAGS)
-
-# # Compilation
-# %.o: %.c
-# 	$(CC) $(CFLAGS) -c -o $@ $<
-
-# # Clean up
-# clean:
-# 	rm -f $(SERVER) $(PINCRACKTEST) $(SERVER_OBJ) $(PINCRACK_OBJ) $(PINCRACKTEST_OBJ)
-
+.PHONY: help
+help:
+	@echo "Makefile commands:"
+	@echo "  make                             - Compile main.c and run"
+	@echo "  make compile                     - Compile main.c"
+	@echo "  make run                         - Run the c-ddns executable"
+	@echo "  make clean                       - Remove the executable"
+	@echo "  make help                        - Show this help message"
