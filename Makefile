@@ -31,22 +31,23 @@ clean:
 
 .PHONY: daemon
 daemon: compile
-	sudo cp ddns 	
+	sudo cp $(COMPILED_FILE_NAME) $(BIN_BINARY) 
+	sudo chmod +x $(BIN_BINARY)	
 	touch $(SYSTEM_MD_FILE)
-	echo "[Unit]
-Description=DDNS Daemon
-After=network.target
+	echo "  [Unit]
+		Description=DDNS Daemon
+		After=network.target
 
-[Service]
-ExecStart=/usr/local/bin/ddns
-Restart=always
-User=root
-WorkingDirectory=/usr/local/bin
-StandardOutput=null
-StandardError=journal
+		[Service]
+		ExecStart=$(BIN_BINARY)
+		Restart=always
+		User=root
+		WorkingDirectory=/usr/local/bin
+		StandardOutput=null
+		StandardError=journal
 
-[Install]
-WantedBy=multi-user.target" > $(SYSTEM_MD_FILE)
+		[Install]
+		WantedBy=multi-user.target" | sudo tee $(SYSTEM_MD_FILE) > /dev/null 
 	sudo systemctl daemon-reload
 	sudo systemctl enable ddns.service
 	sudo systemctl start ddns.service
