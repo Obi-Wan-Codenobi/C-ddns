@@ -17,6 +17,11 @@
  *      Also used some gpt for extracting the ip address from the response.
  *
  *      I additionally used class work for reference on the socket connections.
+ *      Mainly from Texas A&M University CSCE 464 w/ Dr.Radu Stoleru.
+ *
+ *      I also decided to not allocate memory on heap as much as possible, so the 
+ *      buffer size should be allocated appropriately for the data you will be 
+ *      handling
  */
 
 int extractIpAddressFromResponse(char *response, char *ip){
@@ -74,11 +79,16 @@ int updatePublicIpAddress(const char *host, const char *newIp, const char *name,
     //     "/");
 
 
-    snprintf(page, MAXBUF, 
+    int bytesLen = snprintf(page, MAXBUF, 
        "/client/v4/zones/%s/dns_records/%s"
         , zoneId, dnsRecordId);
 
-    snprintf(jsonMsg, MAXBUF, 
+    if (bytesLen > MAXBUF) {
+	fprintf(stderr, "Error: Buffer overflow for page.\n");
+    	return -1;
+    }
+
+    bytesLen = snprintf(jsonMsg, MAXBUF, 
         "{ \"comment\": \"Domain verification record\", "
         "\"content\": \"%s\", "
         "\"name\": \"%s\", "
@@ -86,7 +96,12 @@ int updatePublicIpAddress(const char *host, const char *newIp, const char *name,
         "\"ttl\": 3600, "
         "\"type\": \"A\" }", newIp, name);
     
-    snprintf(request, MAXBUF, 
+    if (bytesLen > MAXBUF) {
+	fprintf(stderr, "Error: Buffer overflow for jsonMsg.\n");
+    	return -1;
+    }
+
+    bytesLen = snprintf(request, MAXBUF, 
         "PUT %s HTTP/1.0\r\n" 
         "Host: %s\r\n"    
         "Content-type: application/json\r\n"
@@ -96,6 +111,10 @@ int updatePublicIpAddress(const char *host, const char *newIp, const char *name,
         "Content-length: %d\r\n\r\n"
         "%s\r\n", page, host, email, apiKey, (unsigned int)strlen(jsonMsg), jsonMsg);
   
+    if (bytesLen > MAXBUF) {
+	fprintf(stderr, "Error: Buffer overflow for request.\n");
+    	return -1;
+    }
     char response[MAXBUF];
     char hostIp [INET_ADDRSTRLEN];
     int ipResult = resolveDomainToIP(host, hostIp, sizeof(hostIp));
@@ -104,9 +123,6 @@ int updatePublicIpAddress(const char *host, const char *newIp, const char *name,
         return -1;
     }
     
-    //NOTE: change host to hostIp and '8000' to '80' for prod
-    // return httpRequest(host, 8000 , request, response);
-    // return httpsRequest(host, 8000 , request, response);
     return httpsRequest(host, 443 , request, response);
 }
 
