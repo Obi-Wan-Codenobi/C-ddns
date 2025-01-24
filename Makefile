@@ -1,7 +1,9 @@
 COMPILED_FILE_NAME=ddns
 BIN_BINARY=/usr/local/bin/ddns
 SYSTEM_MD_FILE=/etc/systemd/system/ddns.service
-
+# Echo with sudo. Doing it line by line since makefile 
+# 	does not seem to support multiline strings
+TEE_CMD = sudo tee -a $(SYSTEM_MD_FILE) > /dev/null
 
 # OpenSSL paths for linux / raspberian (I used w/ pizero W)
 OPENSSL_INCLUDE_PATH=/usr/include/openssl
@@ -32,22 +34,24 @@ clean:
 .PHONY: daemon
 daemon: compile
 	sudo cp $(COMPILED_FILE_NAME) $(BIN_BINARY) 
-	sudo chmod +x $(BIN_BINARY)	
+	sudo chmod +x $(BIN_BINARY)
+	sudo rm -f $(SYSTEM_MD_FILE)
 	@echo "Creating/Overwriting systemd service file..."
-	echo "[Unit]
-Description=DDNS Daemon
-After=network.target
-	
-[Service]
-ExecStart=$(BIN_BINARY)
-Restart=always
-User=root
-WorkingDirectory=/usr/local/bin
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target" | sudo tee $(SYSTEM_MD_FILE) > /dev/null
+	echo "[Unit]" | $(TEE_CMD)
+	echo "Description=DDNS Daemon" | $(TEE_CMD)
+	echo "After=network-online.target" | $(TEE_CMD)
+	echo "Wants=network-online.target" | $(TEE_CMD)
+	echo "" | $(TEE_CMD)
+	echo "[Service]" | $(TEE_CMD)
+	echo "ExecStart=$(BIN_BINARY)" | $(TEE_CMD)
+	echo "Restart=always" | $(TEE_CMD)
+	echo "User=root" | $(TEE_CMD)
+	echo "WorkingDirectory=/usr/local/bin" | $(TEE_CMD)
+	echo "StandardOutput=null" | $(TEE_CMD)
+	echo "StandardError=journal" | $(TEE_CMD)
+	echo "" | $(TEE_CMD)
+	echo "[Install]" | $(TEE_CMD)
+	echo "WantedBy=multi-user.target" | $(TEE_CMD)
 	sudo systemctl daemon-reload
 	sudo systemctl enable ddns.service
 	sudo systemctl start ddns.service
