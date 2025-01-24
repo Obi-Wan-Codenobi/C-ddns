@@ -1,7 +1,7 @@
 #ifndef _REQUESTSH_
 #define _REQUESTSH_
 
-#define MAXBUF 1024
+#define MAXBUF 2048
 #define NUMBER_OF_DOMAINS 5
 
 
