@@ -26,7 +26,7 @@ Then update these paths in the makefile.
 Example:
 
 ```
-# OpenSSL paths for linux
+# OpenSSL paths for linux and Raspberry Pi
 OPENSSL_INCLUDE_PATH=/usr/include/openssl
 OPENSSL_LIB_PATH=/usr/lib/x86_64-linux-gnu
 
@@ -56,6 +56,13 @@ Example:
 #define DNS_RECORD_ID "YourDnsRecordId"
 #define CLOUD_FLARE_DOMAIN "api.cloudflare.com"
 ```
+
+#### Install OpenSSL Development
+Install the library with your package manager, I am using apt-get. So an example of this is:
+```
+sudo apt-get install libssl-dev
+```
+
 Once you have added these parameters to the secrets.c file, you should be ready to run the program.
 
 
