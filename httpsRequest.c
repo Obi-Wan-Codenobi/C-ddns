@@ -20,12 +20,6 @@
 #define FALSE 0
 #define MAX_HOST_NAME_LENGTH 20
 
-/*
-*
-* NOTE: This code was taken from my Texas A&M University CSCE 464 course homework 
-* by Professor Radu Stoleru and modified to fit the projects needs
-*
-*/
 
 SSL_CTX *InitCTX(void);
 
