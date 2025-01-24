@@ -33,21 +33,21 @@ clean:
 daemon: compile
 	sudo cp $(COMPILED_FILE_NAME) $(BIN_BINARY) 
 	sudo chmod +x $(BIN_BINARY)	
-	touch $(SYSTEM_MD_FILE)
-	echo "  [Unit]
-		Description=DDNS Daemon
-		After=network.target
+	@echo "Creating/Overwriting systemd service file..."
+	echo "[Unit]
+Description=DDNS Daemon
+After=network.target
+	
+[Service]
+ExecStart=$(BIN_BINARY)
+Restart=always
+User=root
+WorkingDirectory=/usr/local/bin
+StandardOutput=journal
+StandardError=journal
 
-		[Service]
-		ExecStart=$(BIN_BINARY)
-		Restart=always
-		User=root
-		WorkingDirectory=/usr/local/bin
-		StandardOutput=null
-		StandardError=journal
-
-		[Install]
-		WantedBy=multi-user.target" | sudo tee $(SYSTEM_MD_FILE) > /dev/null 
+[Install]
+WantedBy=multi-user.target" | sudo tee $(SYSTEM_MD_FILE) > /dev/null
 	sudo systemctl daemon-reload
 	sudo systemctl enable ddns.service
 	sudo systemctl start ddns.service
@@ -62,4 +62,5 @@ help:
 	@echo "  make compile                     - Compile main.c"
 	@echo "  make run                         - Run the c-ddns executable"
 	@echo "  make clean                       - Remove the executable"
+	@echo "  make daemon                      - Set up and start the DDNS daemon"
 	@echo "  make help                        - Show this help message"
