@@ -12,6 +12,12 @@ The c-ddns application dynamically updates your Cloudflare website's IP address 
 
 ## Before you run this program
 
+#### Download openssl and openssl development
+Install the library with your package manager, I am using apt-get. So an example of this is:
+```
+sudo apt-get install openssl openssl-dev
+```
+
 #### Define your openssl paths
 In the Makefile, you need to specify the path of your openssl library. You can find these paths by using:
 ```
@@ -55,12 +61,6 @@ Example:
 #define ZONEID "yourZoneId"
 #define DNS_RECORD_ID "YourDnsRecordId"
 #define CLOUD_FLARE_DOMAIN "api.cloudflare.com"
-```
-
-#### Install OpenSSL Development
-Install the library with your package manager, I am using apt-get. So an example of this is:
-```
-sudo apt-get install libssl-dev
 ```
 
 Once you have added these parameters to the secrets.c file, you should be ready to run the program.
